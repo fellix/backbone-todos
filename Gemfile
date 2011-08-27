@@ -21,6 +21,7 @@ gem "rails-backbone"
 gem 'hamljs'
 gem 'haml-rails'
 gem 'decent_exposure'
+gem 'therubyracer'
 
 # Use unicorn as the web server
 # gem 'unicorn'
