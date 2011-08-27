@@ -18,7 +18,8 @@
     ListView.prototype.events = {
       "click .add-todo": "renderTodoForm",
       "dblclick .list-value": "edit",
-      "keypress .list-input": "updateOnEnter"
+      "keypress .list-input": "updateOnEnter",
+      "click .list-destroy": "remove"
     };
     ListView.prototype.initialize = function() {
       _.bindAll(this, 'addOne', 'addAll', 'render');
@@ -62,6 +63,16 @@
         name: this.input.attr('value')
       });
       return $(this.el).removeClass("editing");
+    };
+    ListView.prototype.remove = function(e) {
+      e.preventDefault();
+      if (confirm("Are you sure?")) {
+        return this.model.destroy({
+          error: function(model, response) {
+            return alert("Can't remove this list! Sorry!");
+          }
+        });
+      }
     };
     return ListView;
   })();

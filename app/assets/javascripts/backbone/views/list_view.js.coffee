@@ -6,7 +6,8 @@ class BackboneTodos.Views.ListView extends Backbone.View
   events: {
     "click .add-todo" : "renderTodoForm",
     "dblclick .list-value": "edit",
-    "keypress .list-input": "updateOnEnter"
+    "keypress .list-input": "updateOnEnter",
+    "click .list-destroy": "remove"
   },
   
   initialize: ->
@@ -45,4 +46,9 @@ class BackboneTodos.Views.ListView extends Backbone.View
     return if e.keyCode != 13
     @model.save({name: @input.attr('value')})
     $(@el).removeClass("editing")
-    
+  
+  remove: (e) ->
+    e.preventDefault()
+    @model.destroy({error: (model, response) ->
+      alert("Can't remove this list! Sorry!")
+    }) if confirm("Are you sure?")

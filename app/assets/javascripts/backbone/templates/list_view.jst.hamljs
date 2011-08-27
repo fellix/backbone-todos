@@ -2,7 +2,10 @@
   %h2.list-value
     = name
   %input{name: "name", class: "list-input", value: "#{name}"}
-  %a{href: "#", class: "add-todo"} Adicionar Tarefas
+  .buttons
+    %a{href: "#", class: "add-todo"} Adicionar Tarefas
+    |
+    %a{href: "#", class: "list-destroy"} Remover
   .todo-form
   .list-todos
     %ul.todos

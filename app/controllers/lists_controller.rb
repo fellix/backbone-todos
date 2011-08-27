@@ -23,4 +23,13 @@ class ListsController < ApplicationController
       render :json => {:status => :unprocessable_entity, :errors => list.errors.full_messages}
     end
   end
+  
+  def destroy
+    if list.todos.empty?
+      list.delete 
+      render :json => list
+    else
+      raise "Can't delete that"
+    end
+  end
 end
