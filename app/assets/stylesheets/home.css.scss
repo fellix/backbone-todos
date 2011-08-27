@@ -1,3 +1,16 @@
 // Place all the styles related to the home controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+li .list-input{
+  display: none;
+}
+
+li.editing{ 
+  .list-input{
+    display: block;
+  }
+  .list-value{
+    display: none;
+  }
+}

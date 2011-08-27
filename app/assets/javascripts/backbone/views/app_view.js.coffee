@@ -1,6 +1,5 @@
 class BackboneTodos.Views.AppView extends Backbone.View
   template: JST["backbone/templates/home"],
-  #el: $("taskapp")
   
   events: {
     "keypress #new-list" : "createOnEnter"

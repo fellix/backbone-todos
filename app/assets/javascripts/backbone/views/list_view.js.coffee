@@ -4,7 +4,9 @@ class BackboneTodos.Views.ListView extends Backbone.View
   template: JST["backbone/templates/list_view"],
   
   events: {
-    "click .add-todo" : "renderTodoForm"
+    "click .add-todo" : "renderTodoForm",
+    "dblclick .list-value": "edit",
+    "keypress .list-input": "updateOnEnter"
   },
   
   initialize: ->
@@ -12,13 +14,13 @@ class BackboneTodos.Views.ListView extends Backbone.View
     @model.bind('change', @render)
     @todos = new BackboneTodos.Collections.TodosCollection(@model.id)
     @todos.bind('add',     @addOne)
-    #@todos.bind('refresh', @addAll)
     @todos.bind('all',     @addAll)
 
     @todos.fetch()
     
   render: ->
     $(@el).html(@template(@model.toJSON()))
+    @input = @$(".list-input")
     $(@el).attr("id", "list-#{@model.id}")
     @
   
@@ -34,3 +36,13 @@ class BackboneTodos.Views.ListView extends Backbone.View
   renderTodoForm: ->
     view = new BackboneTodos.Views.NewTodo(@todos).render().el
     @$(".todo-form").html(view)
+  
+  edit: ->
+    $(@el).addClass("editing")
+    @input.focus()
+  
+  updateOnEnter: (e) ->
+    return if e.keyCode != 13
+    @model.save({name: @input.attr('value')})
+    $(@el).removeClass("editing")
+    

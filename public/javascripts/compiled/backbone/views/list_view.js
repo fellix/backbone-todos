@@ -16,7 +16,9 @@
     ListView.prototype.className = "list";
     ListView.prototype.template = JST["backbone/templates/list_view"];
     ListView.prototype.events = {
-      "click .add-todo": "renderTodoForm"
+      "click .add-todo": "renderTodoForm",
+      "dblclick .list-value": "edit",
+      "keypress .list-input": "updateOnEnter"
     };
     ListView.prototype.initialize = function() {
       _.bindAll(this, 'addOne', 'addAll', 'render');
@@ -28,6 +30,7 @@
     };
     ListView.prototype.render = function() {
       $(this.el).html(this.template(this.model.toJSON()));
+      this.input = this.$(".list-input");
       $(this.el).attr("id", "list-" + this.model.id);
       return this;
     };
@@ -46,6 +49,19 @@
       var view;
       view = new BackboneTodos.Views.NewTodo(this.todos).render().el;
       return this.$(".todo-form").html(view);
+    };
+    ListView.prototype.edit = function() {
+      $(this.el).addClass("editing");
+      return this.input.focus();
+    };
+    ListView.prototype.updateOnEnter = function(e) {
+      if (e.keyCode !== 13) {
+        return;
+      }
+      this.model.save({
+        name: this.input.attr('value')
+      });
+      return $(this.el).removeClass("editing");
     };
     return ListView;
   })();
