@@ -5,7 +5,8 @@ class BackboneTodos.Views.TodoView extends Backbone.View
   
   events: {
     "dblclick .todo-content": "edit",
-    "keypress .todo-input": "updateOnEnter"
+    "keypress .todo-input": "updateOnEnter",
+    "click .todo-destroy": "remove"
   },
   
   initialize: ->
@@ -26,3 +27,7 @@ class BackboneTodos.Views.TodoView extends Backbone.View
     return if e.keyCode != 13
     @model.save({name: @input.attr('value')})
     $(@el).removeClass("editing")
+  
+  remove: (e) ->
+    e.preventDefault()
+    @model.destroy() if confirm("Are you sure?")

@@ -17,7 +17,8 @@
     TodoView.prototype.template = JST["backbone/templates/todo_view"];
     TodoView.prototype.events = {
       "dblclick .todo-content": "edit",
-      "keypress .todo-input": "updateOnEnter"
+      "keypress .todo-input": "updateOnEnter",
+      "click .todo-destroy": "remove"
     };
     TodoView.prototype.initialize = function() {
       _.bindAll(this, 'render');
@@ -41,6 +42,12 @@
         name: this.input.attr('value')
       });
       return $(this.el).removeClass("editing");
+    };
+    TodoView.prototype.remove = function(e) {
+      e.preventDefault();
+      if (confirm("Are you sure?")) {
+        return this.model.destroy();
+      }
     };
     return TodoView;
   })();

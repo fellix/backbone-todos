@@ -3,3 +3,4 @@
   %span
     = name
 %input{name: "name", class: "todo-input", value: "#{name}"}
+%a{href:"#", class: "todo-destroy"} Remove

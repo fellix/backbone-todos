@@ -26,4 +26,9 @@ class TodosController < ApplicationController
     end
   end
   
+  def destroy
+    todo.destroy
+    render :json => todo
+  end
+  
 end

@@ -2,9 +2,9 @@ require 'spec_helper'
 
 describe TodosController do
   let(:list){ List.create!(name: "test") }
+  let(:todo){ Todo.create!(name: "todo 1", list_id: list.id) }
   
   describe "GET 'index'" do
-    let(:todo){ Todo.create!(name: "todo 1", list_id: list.id) }
     let(:expected){ [{"id" => 1, "name" => "todo 1", "done" => false}] }
     before do
       todo
@@ -30,22 +30,26 @@ describe TodosController do
     
   end
   describe "PUT 'update'" do
-    let(:list){ List.create! name: "the list" }
-    let(:todo){ Todo.create! name: "the todo", list_id: list.id }
-    
     before do
       todo
     end
-    
     it "should fail" do
       expected = { "status" => "unprocessable_entity", "errors" => ["Name can't be blank"]  }
       put :update, :format => :json, :list_id => list.id, :id => todo.id, :todo => { :name => nil }
       ActiveSupport::JSON.decode(response.body).should == expected
     end
     
-    it "should be success" do
+    it "should be sucessful" do
       expected = {"id" => 1, "name" => "test", "done" => false}
       put :update, :format => :json, :list_id => list.id, :id => todo.id, :todo => { :name => "test" }
+      ActiveSupport::JSON.decode(response.body).should == expected
+    end
+  end
+  
+  describe "DELETE 'destroy'" do
+    it "should be sucessful" do
+      expected = {"id" => 1, "name" => "todo 1", "done" => false}
+      delete :destroy, :format => :json, :list_id => list.id, :id => todo.id
       ActiveSupport::JSON.decode(response.body).should == expected
     end
   end
