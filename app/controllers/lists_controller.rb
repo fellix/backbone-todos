@@ -10,7 +10,15 @@ class ListsController < ApplicationController
   
   def create
     if list.save
-      render :json => list.as_json(:only => [:id, :name])
+      render :json => list
+    else
+      render :json => {:status => :unprocessable_entity, :errors => list.errors.full_messages}
+    end
+  end
+  
+  def update
+    if list.update_attributes(params[:list])
+      render :json => list
     else
       render :json => {:status => :unprocessable_entity, :errors => list.errors.full_messages}
     end

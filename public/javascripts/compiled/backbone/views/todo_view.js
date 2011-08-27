@@ -15,14 +15,32 @@
     TodoView.prototype.tagName = "li";
     TodoView.prototype.className = "todo-item";
     TodoView.prototype.template = JST["backbone/templates/todo_view"];
+    TodoView.prototype.events = {
+      "dblclick .todo-content": "edit",
+      "keypress .todo-input": "updateOnEnter"
+    };
     TodoView.prototype.initialize = function() {
       _.bindAll(this, 'render');
       return this.model.bind('change', this.render);
     };
     TodoView.prototype.render = function() {
       $(this.el).html(this.template(this.model.toJSON()));
+      this.input = this.$(".todo-input");
       $(this.el).attr("id", "todo-" + this.model.id);
       return this;
+    };
+    TodoView.prototype.edit = function() {
+      $(this.el).addClass("editing");
+      return this.input.focus();
+    };
+    TodoView.prototype.updateOnEnter = function(e) {
+      if (e.keyCode !== 13) {
+        return;
+      }
+      this.model.save({
+        name: this.input.attr('value')
+      });
+      return $(this.el).removeClass("editing");
     };
     return TodoView;
   })();

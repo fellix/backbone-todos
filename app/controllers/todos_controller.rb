@@ -18,4 +18,12 @@ class TodosController < ApplicationController
     end
   end
   
+  def update
+    if todo.update_attributes(params[:todo])
+      render :json => todo
+    else
+      render :json => {:status => :unprocessable_entity, :errors => todo.errors.full_messages}
+    end
+  end
+  
 end

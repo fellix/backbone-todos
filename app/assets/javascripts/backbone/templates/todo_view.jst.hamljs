@@ -2,4 +2,4 @@
 .todo-content
   %span
     = name
-  
+%input{name: "name", class: "todo-input", value: "#{name}"}

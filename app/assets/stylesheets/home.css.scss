@@ -2,15 +2,20 @@
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
-li .list-input{
-  display: none;
+li{ 
+  .list-input{
+    display: none;
+  }
+  .todo-input{
+    display: none;
+  }
 }
 
 li.editing{ 
-  .list-input{
+  .list-input, .todo-input{
     display: block;
   }
-  .list-value{
+  .list-value, .todo-content{
     display: none;
   }
 }

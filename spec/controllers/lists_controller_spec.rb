@@ -15,12 +15,10 @@ describe ListsController do
   end
   
   describe "POST 'create'" do
-    let(:list){ double("List") }
     
     it "should fail" do
-      List.any_instance.stub(:save){ false }
-      expected = { "status" => "unprocessable_entity", "errors" => []  }
-      post :create, :format => :json, :list => { :name => "test" }
+      expected = { "status" => "unprocessable_entity", "errors" => ["Name can't be blank"]  }
+      post :create, :format => :json, :list => { :name => nil }
       ActiveSupport::JSON.decode(response.body).should == expected
     end
     
@@ -31,4 +29,21 @@ describe ListsController do
     end
     
   end
+  
+  describe "PUT 'update'" do
+    let(:list){ List.create! name: "the list" }
+    
+    it "should fail" do
+      expected = { "status" => "unprocessable_entity", "errors" => ["Name can't be blank"]  }
+      put :update, :format => :json, :id => list.id, :list => { :name => nil }
+      ActiveSupport::JSON.decode(response.body).should == expected
+    end
+    
+    it "should be success" do
+      expected = {"id" => 1, "name" => "test"}
+      put :update, :format => :json, :id => list.id, :list => { :name => "test" }
+      ActiveSupport::JSON.decode(response.body).should == expected
+    end
+  end
+  
 end
