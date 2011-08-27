@@ -2,7 +2,7 @@ class ListsController < ApplicationController
   respond_to :json
   
   expose(:list)
-  expose(:lists){ List.select("id, name") }
+  expose(:lists){ List.all }
   
   def index
     respond_with(lists)
