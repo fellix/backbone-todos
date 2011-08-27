@@ -1,0 +1,6 @@
+%form
+  %label{for: "name"} Task
+  %input{name: "name", class: "new-todo"}
+  %input{id: "commit", value: "Save", type: "submit"}
+  
+%a{href: "#", class: "close-form"} Fechar

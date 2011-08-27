@@ -1,0 +1,9 @@
+.title
+  %h1 Backbone Todo App
+.content
+  #create-list
+    %input{id: 'new-list', placeholder: "What needs to be done?", type:'text' }
+    %span.ui-tooltip-top
+      Press Enter to create this list
+  #todos
+    %ul#todo-list

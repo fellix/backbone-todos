@@ -1,0 +1,5 @@
+%input{type: "checkbox", class: "todo-check"}
+.todo-content
+  %span
+    = name
+  

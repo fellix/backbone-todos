@@ -1,0 +1,7 @@
+.list-content
+  %h2
+    = name
+  %a{href: "#", class: "add-todo"} Adicionar Tarefas
+  .todo-form
+  .list-todos
+    %ul.todos
