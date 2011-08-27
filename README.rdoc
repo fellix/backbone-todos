@@ -1,0 +1,7 @@
+== Todo App
+
+This is a simple app that uses Backbone.JS (http://documentcloud.github.com/backbone/), it's based on the 37Signals Tada-list (http://tadalist.com/), and uses a Ruby on Rails for persistense
+
+== In Action
+
+Take a look at http://backbone-todos.heroku.com/ 
