@@ -3,9 +3,9 @@
     = name
   %input{name: "name", class: "list-input", value: "#{name}"}
   .buttons
-    %a{href: "#", class: "add-todo"} Adicionar Tarefas
+    %a{href: "#", class: "add-todo"} Add Todo
     |
-    %a{href: "#", class: "list-destroy"} Remover
+    %a{href: "#", class: "list-destroy"} Delete
   .todo-form
   .list-todos
     %ul.todos
