@@ -1,8 +1,8 @@
 var Haml;
-
+ 
 (function () {
 
-  var matchers, self_close_tags, embedder, forceXML;
+  var matchers, self_close_tags, embedder, forceXML, escaperName, escapeHtmlByDefault;
 
   function html_escape(text) {
     return (text + "").
@@ -34,7 +34,7 @@ var Haml;
             }
             result.push(" " + key + '=\\"' + value + '\\"');
           } catch (e) {
-            result.push(" " + key + '=\\"" + html_escape(' + attribs[key] + ') + "\\"');
+            result.push(" " + key + '=\\"" + '+escaperName+'(' + attribs[key] + ') + "\\"');
           }
         }
       }
@@ -153,14 +153,20 @@ var Haml;
       match = value.substr(pos).match(embedder);
       next = match[0].length;
       if (next < 0) { break; }
-      items.push(match[1] || match[2]);
+      if(match[1] === "#"){
+        items.push(escaperName+"("+(match[2] || match[3])+")");
+      }else{
+        //unsafe!!!
+        items.push(match[2] || match[3]);
+      }
+      
       pos += next;
     }
     return items.filter(function (part) { return part && part.length > 0}).join(" +\n");
   }
 
   // Used to find embedded code in interpolated strings.
-  embedder = /\#\{([^}]*)\}/;
+  embedder = /([#!])\{([^}]*)\}/;
 
   self_close_tags = ["meta", "img", "link", "br", "hr", "input", "area", "base"];
 
@@ -169,13 +175,14 @@ var Haml;
   matchers = [
     // html tags
     {
+      name: "html tags",
       regexp: /^(\s*)((?:[.#%][a-z_\-][a-z0-9_:\-]*)+)(.*)$/i,
       process: function () {
-        var tag, classes, ids, attribs, content;
-        tag = this.matches[2];
-        classes = tag.match(/\.([a-z_\-][a-z0-9_\-]*)/gi);
-        ids = tag.match(/\#([a-z_\-][a-z0-9_\-]*)/gi);
-        tag = tag.match(/\%([a-z_\-][a-z0-9_:\-]*)/gi);
+        var line_beginning, tag, classes, ids, attribs, content, whitespaceSpecifier, whitespace={}, output;
+        line_beginning = this.matches[2];
+        classes = line_beginning.match(/\.([a-z_\-][a-z0-9_\-]*)/gi);
+        ids = line_beginning.match(/\#([a-z_\-][a-z0-9_\-]*)/gi);
+        tag = line_beginning.match(/\%([a-z_\-][a-z0-9_:\-]*)/gi);
 
         // Default to <div> tag
         tag = tag ? tag[0].substr(1, tag[0].length) : 'div';
@@ -184,6 +191,28 @@ var Haml;
         if (attribs) {
           attribs = parse_attribs(attribs);
           if (attribs._content) {
+            var leader0 = attribs._content.charAt(0),
+                leader1 = attribs._content.charAt(1),
+                leaderLength = 0;
+                
+            if(leader0 == "<"){
+              leaderLength++;
+              whitespace.inside = true;
+              if(leader1 == ">"){
+                leaderLength++;
+                whitespace.around = true;
+              }
+            }else if(leader0 == ">"){
+              leaderLength++;
+              whitespace.around = true;
+              if(leader1 == "<"){
+                leaderLength++;
+                whitespace.inside = true;
+              }
+            }
+            attribs._content = attribs._content.substr(leaderLength);
+            //once we've identified the tag and its attributes, the rest is content.
+            // this is currently trimmed for neatness.
             this.contents.unshift(attribs._content.trim());
             delete(attribs._content);
           }
@@ -222,19 +251,40 @@ var Haml;
         if (content === '""') {
           content = '';
         }
+        
+        if(whitespace.inside){
+          if(content.length==0){
+            content='"  "'
+          }else{
+            try{ //remove quotes if they are there
+              content = '" '+JSON.parse(content)+' "';
+            }catch(e){
+              content = '" "+\n'+content+'+\n" "';
+            }            
+          }
+        }
 
         if (forceXML ? content.length > 0 : self_close_tags.indexOf(tag) == -1) {
-          return '"<' + tag + attribs + '>"' +
+          output = '"<' + tag + attribs + '>"' +
             (content.length > 0 ? ' + \n' + content : "") +
             ' + \n"</' + tag + '>"';
         } else {
-          return '"<' + tag + attribs + ' />"';
+          output = '"<' + tag + attribs + ' />"';
         }
+        
+        if(whitespace.around){
+          //output now contains '"<b>hello</b>"'
+          //we need to crack it open to insert whitespace.
+          output = '" '+output.substr(1, output.length - 2)+' "';
+        }
+
+        return output;
       }
     },
 
     // each loops
     {
+      name: "each loop",
       regexp: /^(\s*)(?::for|:each)\s+(?:([a-z_][a-z_\-]*),\s*)?([a-z_][a-z_\-]*)\s+in\s+(.*)(\s*)$/i,
       process: function () {
         var ivar = this.matches[2] || '__key__', // index
@@ -257,6 +307,7 @@ var Haml;
 
     // if statements
     {
+      name: "if",
       regexp: /^(\s*):if\s+(.*)\s*$/i,
       process: function () {
         var condition = this.matches[2];
@@ -266,9 +317,50 @@ var Haml;
           '} else { return ""; } }).call(this)';
       }
     },
+    
+    // silent-comments
+    {
+      name: "silent-comments",
+      regexp: /^(\s*)-#\s*(.*)\s*$/i,
+      process: function () {
+        return '""';
+      }
+    },
+    
+    //html-comments
+    {
+      name: "silent-comments",
+      regexp: /^(\s*)\/\s*(.*)\s*$/i,
+      process: function () {
+        this.contents.unshift(this.matches[2]);
+        
+        return '"<!--'+this.contents.join('\\n')+'-->"';
+      }
+    },
+    
+    // raw js
+    {
+      name: "rawjs",
+      regexp: /^(\s*)-\s*(.*)\s*$/i,
+      process: function () {
+        this.contents.unshift(this.matches[2]);
+        return '"";' + this.contents.join("\n")+"; _$output = _$output ";
+      }
+    },
 
+    // raw js
+    {
+      name: "pre",
+      regexp: /^(\s*):pre(\s+(.*)|$)/i,
+      process: function () {
+        this.contents.unshift(this.matches[2]);
+        return '"<pre>"+\n' + JSON.stringify(this.contents.join("\n"))+'+\n"</pre>"';
+      }
+    },
+    
     // declarations
     {
+      name: "doctype",
       regexp: /^()!!!(?:\s*(.*))\s*$/,
       process: function () {
         var line = '';
@@ -317,6 +409,7 @@ var Haml;
 
     // Embedded markdown. Needs to be added to exports externally.
     {
+      name: "markdown",
       regexp: /^(\s*):markdown\s*$/i,
       process: function () {
         return parse_interpol(exports.Markdown.encode(this.contents.join("\n")));
@@ -325,6 +418,7 @@ var Haml;
 
     // script blocks
     {
+      name: "script",
       regexp: /^(\s*):(?:java)?script\s*$/,
       process: function () {
         return parse_interpol('\n<script type="text/javascript">\n' +
@@ -336,13 +430,14 @@ var Haml;
 
     // css blocks
     {
+      name: "css",
       regexp: /^(\s*):css\s*$/,
       process: function () {
-        return JSON.stringify('\n<style type="text/css">\n' +
+        return JSON.stringify('<style type="text/css">\n' +
           this.contents.join("\n") +
-          "\n</style>\n");
+          "\n</style>");
       }
-    },
+    }
 
   ];
 
@@ -352,7 +447,7 @@ var Haml;
 
     // If lines is a string, turn it into an array
     if (typeof lines === 'string') {
-      lines = lines.trim().split("\n");
+      lines = lines.trim().replace(/\n\r|\r/g, '\n').split('\n');
     }
 
     lines.forEach(function(line) {
@@ -360,7 +455,7 @@ var Haml;
 
       // Collect all text as raw until outdent
       if (block) {
-        match = block.check_indent(line);
+        match = block.check_indent.exec(line);
         if (match) {
           block.contents.push(match[1] || "");
           return;
@@ -372,15 +467,16 @@ var Haml;
 
       matchers.forEach(function (matcher) {
         if (!found) {
-          match = matcher.regexp(line);
+          match = matcher.regexp.exec(line);
           if (match) {
             block = {
               contents: [],
+              indent_level: (match[1]),
               matches: match,
               check_indent: new RegExp("^(?:\\s*|" + match[1] + "  (.*))$"),
               process: matcher.process,
               render_contents: function () {
-                return compile(this. contents);
+                return compile(this.contents);
               }
             };
             found = true;
@@ -396,23 +492,42 @@ var Haml;
             return parse_interpol(line.substr(1, line.length));
           }
 
-          // Plain variable data
-          if (line[0] === '=') {
-            line = line.substr(1, line.length).trim();
+
+          function escapedLine(){
+            try {
+              return escaperName+'('+JSON.stringify(JSON.parse(line)) +')';
+            } catch (e2) {
+              return escaperName+'(' + line + ')';
+            }
+          }
+          
+          function unescapedLine(){
             try {
               return parse_interpol(JSON.parse(line));
             } catch (e) {
               return line;
             }
           }
-
-          // HTML escape variable data
-          if (line.substr(0, 2) === "&=") {
+          
+          // always escaped
+          if((line.substr(0, 2) === "&=")) {
             line = line.substr(2, line.length).trim();
-            try {
-              return JSON.stringify(html_escape(JSON.parse(line)));
-            } catch (e2) {
-              return 'html_escape(' + line + ')';
+            return escapedLine();
+          }
+          
+          //never escaped
+          if((line.substr(0, 2) === "!=")) {
+            line = line.substr(2, line.length).trim();
+            return unescapedLine();
+          }
+          
+          // sometimes escaped
+          if ( (line[0] === '=')) {
+            line = line.substr(1, line.length).trim();
+            if(escapeHtmlByDefault){
+              return escapedLine();
+            }else{
+              return unescapedLine();
             }
           }
 
@@ -425,7 +540,12 @@ var Haml;
     if (block) {
       output.push(block.process());
     }
-    return output.filter(function (part) { return part && part.length > 0}).join(" +\n");
+    
+    var txt = output.filter(function (part) { return part && part.length > 0}).join(" +\n");
+    if(txt.length == 0){
+      txt = '""';
+    }
+    return txt;
   };
 
   function optimize(js) {
@@ -437,7 +557,7 @@ var Haml;
         buffer = [];
       }
     }
-    js.split("\n").forEach(function (line) {
+    js.replace(/\n\r|\r/g, '\n').split('\n').forEach(function (line) {
       part = line.match(/^(\".*\")(\s*\+\s*)?$/);
       if (!part) {
         flush();
@@ -459,7 +579,8 @@ var Haml;
 
   function render(text, options) {
     options = options || {};
-    var js = compile(text);
+    text = text || "";
+    var js = compile(text, options);
     if (options.optimize) {
       js = Haml.optimize(js);
     }
@@ -470,7 +591,9 @@ var Haml;
     return (function () {
       with(locals || {}) {
         try {
-          return eval("(" + js + ")");
+          var _$output;
+          eval("_$output =" + js );
+          return _$output; //set in eval
         } catch (e) {
           return "\n<pre class='error'>" + html_escape(e.stack) + "</pre>\n";
         }
@@ -479,24 +602,47 @@ var Haml;
     }).call(self);
   };
 
-  Haml = function Haml(haml, xml) {
-    forceXML = xml;
+  Haml = function Haml(haml, config) {
+    if(typeof(config) != "object"){
+      forceXML = config;
+      config = {};
+    }
+    
+    var escaper;
+    if(config.customEscape){
+      escaper = "";
+      escaperName = config.customEscape;
+    }else{
+      escaper = html_escape.toString() + "\n";
+      escaperName = "html_escape";
+    }
+    
+    escapeHtmlByDefault = (config.escapeHtmlByDefault || config.escapeHTML || config.escape_html);
+    
     var js = optimize(compile(haml));
-    return new Function("locals",
-      html_escape + "\n" +
-      "with(locals || {}) {\n" +
-      "  try {\n" +
-      "    return (" + js + ");\n" +
-      "  } catch (e) {\n" +
-      "    return \"\\n<pre class='error'>\" + html_escape(e.stack) + \"</pre>\\n\";\n" +
-      "  }\n" +
-      "}");
+    
+    var str = "with(locals || {}) {\n" +
+    "  try {\n" +
+    "   var _$output=" + js + ";\n return _$output;" +
+    "  } catch (e) {\n" +
+    "    return \"\\n<pre class='error'>\" + "+escaperName+"(e.stack) + \"</pre>\\n\";\n" +
+    "  }\n" +
+    "}"
+
+    try{
+      var f = new Function("locals",  escaper + str );
+      return f;
+    }catch(e){
+      console.error(str);
+      throw e;
+    }
   }
+
   Haml.compile = compile;
   Haml.optimize = optimize;
   Haml.render = render;
   Haml.execute = execute;
-
+  Haml.html_escape = html_escape;
 }());
 
 // Hook into module system
