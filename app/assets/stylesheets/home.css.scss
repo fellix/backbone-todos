@@ -12,10 +12,21 @@ li{
 }
 
 li.editing{ 
-  .list-input, .todo-input{
+  .list-input {
     display: block;
   }
-  .list-value, .todo-content{
+  .list-value{
     display: none;
   }
+}
+li.todo-editing{
+  .todo-input{
+    display: block;
+  }
+  .todo-content{
+    display: none;
+  }
+}
+.margin-left-10{
+  margin-left: 10px;
 }

@@ -20,13 +20,13 @@ class BackboneTodos.Views.TodoView extends Backbone.View
     @
   
   edit: ->
-    $(@el).addClass("editing")
+    $(@el).addClass("todo-editing")
     @input.focus()
   
   updateOnEnter: (e) ->
     return if e.keyCode != 13
     @model.save({name: @input.attr('value')})
-    $(@el).removeClass("editing")
+    $(@el).removeClass("todo-editing")
   
   remove: (e) ->
     e.preventDefault()

@@ -1,6 +1,10 @@
-%input{type: "checkbox", class: "todo-check"}
-.todo-content
-  %span
+.todo-content{style: "padding-top: 10px"}
+  %input{type: "checkbox", class: "todo-check"}
+  %span{style:"padding-left: 5px"}
     = name
-%input{name: "name", class: "todo-input", value: "#{name}"}
-%a{href:"#", class: "todo-destroy"} Remove
+  .info{style: "padding-left:5px;"}
+    %span{class: "label"} Double click to edit
+    %span{style: "padding-left:5px;"}
+      %a{href:"#", class: "todo-destroy"} Remove
+.todo-input{style: "padding-top: 10px"}
+  %input{name: "name", value: "#{name}", type: "text"}

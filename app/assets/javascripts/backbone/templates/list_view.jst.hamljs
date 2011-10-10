@@ -1,11 +1,14 @@
 .list-content
-  %h2.list-value
-    = name
-  %input{name: "name", class: "list-input", value: "#{name}"}
+  .list-value
+    %h2
+      = name
+    %span{style: "padding-left:5px;"}
+      %span{class: "label"} Double click to edit
+  .list-input.input{style: "padding-top: 5px;padding-bottom:5px"}
+    %input{name: "name", class: "edit-input xlarge", value: "#{name}", type: "text"}
   .buttons
-    %a{href: "#", class: "add-todo"} Add Todo
-    |
-    %a{href: "#", class: "list-destroy"} Delete
+    %a{href: "#", class: "add-todo btn primary"} Add Todo
+    %a{href: "#", class: "list-destroy btn"} Delete
   .todo-form
   .list-todos
     %ul.todos
