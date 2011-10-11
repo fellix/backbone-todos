@@ -1,4 +1,5 @@
 class BackboneTodos.Views.NewTodo extends Backbone.View
+  className: "well"
   template: JST["backbone/templates/new_todo"],
   
   events:{

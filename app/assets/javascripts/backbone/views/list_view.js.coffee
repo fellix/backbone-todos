@@ -34,7 +34,8 @@ class BackboneTodos.Views.ListView extends Backbone.View
     @$(".todos").html("")
     @todos.each(@addOne)
   
-  renderTodoForm: ->
+  renderTodoForm: (e) ->
+    e.preventDefault()
     view = new BackboneTodos.Views.NewTodo(@todos).render().el
     @$(".todo-form").html(view)
   

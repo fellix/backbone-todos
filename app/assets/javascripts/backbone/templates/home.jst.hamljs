@@ -8,3 +8,5 @@
           Press Enter to create this list
       #todos
         %ul#todo-list
+    .alert-message.info
+      Double click in a list or a task to edit
