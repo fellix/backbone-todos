@@ -15,7 +15,7 @@ class BackboneTodos.Views.TodoView extends Backbone.View
     
   render: ->
     $(@el).html(@template(@model.toJSON()))
-    @input = @$(".todo-input")
+    @input = @$(".todo-input > input")
     $(@el).attr("id", "todo-#{@model.id}")
     @
   
